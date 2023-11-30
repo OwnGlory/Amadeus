@@ -42,8 +42,8 @@ while chunkIndex < byteCount
 end
 disp(msgArray)
 
-
-osc = audioOscillator ('square', 'Amplitude', 0,'DutyCycle', 0.75);
+sineWave = dsp.SineWave('Frequency', frequencies(i), 'Amplitude', 0.8);
+osc = audioOscillator ('sine', 'Amplitude', 0,'DutyCycle', 0.75);
 deviceWriter = audioDeviceWriter;
 
 simplesynth (msgArray, osc, deviceWriter);

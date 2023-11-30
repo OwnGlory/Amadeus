@@ -1,9 +1,2 @@
-addpath('C:\Program Files\MATLAB\matlab-midi-master\src');
-% Загружаем MIDI-файл
-nmat = readmidi('Cymatics - Baby - 152 BPM A# Min.mid');
 
-nmat = midiInfo(midiFile);
-plotdist(pcdist1(nmat)) 
-
-playsound(nmat);
-
+array = [[1,2] ; [1,2,3] ; [1,2,3,4]]

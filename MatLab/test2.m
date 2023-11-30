@@ -18,19 +18,29 @@ function pianoSound = generatePianoWave(noteNumber, duration, fs)
 
     % Генерация синусоидальной волны
     waveform = sin(2 * pi * frequency * t);
-
+    disp(size(waveform));
     % Атака (квадратичная)
-    attack = (linspace(0, 1, round(fs * 0.02))).^2;
-    waveform(1:length(attack)) = waveform(1:length(attack)) .* attack
+    attack = (linspace(0, 1, round(fs * 0.2))).^2;
+    % attack = attack(1:length(waveform));
+    waveform(1:length(attack)) = waveform(1:length(attack)) .* attack;
+    disp(size(waveform));
 
     % Удержание
-    sustain = ones(1, round(fs * 0.1));
+    sustain = ones(1, round(fs * 0.6));
+    % sustain = sustain(1:length(waveform)); 
 
     % Затухание (квадратичное)
-    decay = (linspace(1, 0.5, round(fs * 0.1))).^2;
-    release = linspace(0.5, 0, round(fs * 0.1));
+    decay = (linspace(1, 0.5, round(fs * 0.6))).^2;
+    % decay = decay(1:length(waveform));
+    release = linspace(0.5, 0, round(fs * 0.6));
+    % release = release(1:length(waveform));
 
-    envelope = [sustain; decay; release];
+    % envelope = [sustain; decay; release];
+
+    envelope = [attack, sustain, decay, release];
+
+    disp(size(waveform));
+    disp(size(envelope));
 
     waveform = waveform .* envelope;
 

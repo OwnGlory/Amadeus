@@ -1,52 +1,57 @@
-readme = fopen('Cymatics - Baby - 152 BPM A# Min.mid');
+readme = fopen('Cymatics - All I Need - 165 BPM D# Min.mid');
 [readOut, byteCount] = fread(readme);
 fclose(readme);
 % Concatenate ticksPerQNote from 2 bytes
 ticksPerQNote = polyval(readOut(13:14),256);
+
 % Initialize values
 chunkIndex = 14; % Header chunk is always 14 bytes
 ts = 0; % Timestamp - Starts at zero
-BPM = 120; 
-msgArray = []; 
+BPM = 120;
+msgArray = [];
+durationArray = [];
+samplefreq = 44100;
 
 % Parse track chunks in outer loop
-while chunkIndex < byteCount
- 
- % Read header of track chunk, find chunk length 
-    % Add 8 to chunk length to account for track chunk header length
- chunkLength = polyval(readOut(chunkIndex+(5:8)),256)+8;
- 
- ptr = 8+chunkIndex; % Determine start for MIDI event parsing
- statusByte = -1; % Initialize statusByte. Used for running status support
-    
-    % Parse MIDI track events in inner loop
-    while ptr < chunkIndex+chunkLength
-      % Read delta-time
-        [deltaTime,deltaLen] = findVariableLength(ptr,readOut); 
-      % Push pointer to beginning of MIDI message
-        ptr = ptr+deltaLen;
- 
- % Read MIDI message
-        [statusByte,messageLen,message] = interpretMessage(statusByte,ptr,readOut);
- % Extract relevant data - Create midimsg object
-        [ts,msg] = createMessage(message,ts,deltaTime,ticksPerQNote,BPM);
- 
- % Add midimsg to msgArray
-        msgArray = [msgArray;msg];
- % Push pointer to next MIDI message
-        ptr = ptr+messageLen;
+    while chunkIndex < byteCount
+     
+     % Read header of track chunk, find chunk length 
+        % Add 8 to chunk length to account for track chunk header length
+     chunkLength = polyval(readOut(chunkIndex+(5:8)),256)+8;
+     
+     ptr = 8+chunkIndex; % Determine start for MIDI event parsing
+     statusByte = -1; % Initialize statusByte. Used for running status support
+        
+        % Parse MIDI track events in inner loop
+        while ptr < chunkIndex+chunkLength
+          % Read delta-time
+            [deltaTime,deltaLen] = findVariableLength(ptr,readOut); 
+          % Push pointer to beginning of MIDI message
+            ptr = ptr+deltaLen;
+     
+     % Read MIDI message
+            [statusByte,messageLen,message] = interpretMessage(statusByte,ptr,readOut);
+     % Extract relevant data - Create midimsg object
+            [ts,msg] = createMessage(message,ts,deltaTime,ticksPerQNote,BPM);
+            durationData = (deltaTime / ticksPerQNote) * (60 / BPM);
+            durationArray = [durationArray, durationData];
+     % Add midimsg to msgArray
+            msgArray = [msgArray; msg];
+     % Push pointer to next MIDI message
+            ptr = ptr+messageLen;
+        end
+        
+        % Push chunkIndex to next track chunk
+     chunkIndex = chunkIndex+chunkLength;
     end
-    
-    % Push chunkIndex to next track chunk
- chunkIndex = chunkIndex+chunkLength;
-end
-disp(msgArray)
 
-sineWave = dsp.SineWave('Frequency', frequencies(i), 'Amplitude', 0.8);
-osc = audioOscillator ('sine', 'Amplitude', 0,'DutyCycle', 0.75);
+% disp(msgArray);
+
+osc = audioOscillator ('sine', 'Amplitude', 0,'SampleRate', 44100,'DutyCycle', 0.75);
+
 deviceWriter = audioDeviceWriter;
 
-simplesynth (msgArray, osc, deviceWriter);
+simplesynth (msgArray, osc, deviceWriter, durationArray);
 
 function [valueOut,byteLength] = findVariableLength(lengthIndex,readOut)
 
@@ -168,26 +173,63 @@ msgOut = midimsg.fromStruct(midiStruct);
 
 end
 
-function simplesynth(msgArray,osc,deviceWriter)
+function wave = wavefunction(samplefreq, note, time, amplitude)
+    constant_exp = -0.0004;
+    n = 3;
+    
+    T = (0:1/samplefreq:time);
+    count_note_per_octave = 12;
+    freq = 440 * 2.^((note - 49)/count_note_per_octave);
+    wave = zeros(size(T));
+    number_sin = 2 * pi * freq;
+    number_exp = constant_exp * number_sin;
+    
+    for j = 1:n
+        wave = wave + amplitude * sin(2^(j-1) * number_sin * T) .* exp(number_exp * T) ./ 2^(j-1);
+    end
+    
+    wave = (wave + wave.^3) / n;
+end
+
+
+function simplesynth(msgArray,osc,deviceWriter, durationArray)
 
 i = 1;
+note = 0;
+amplitude = 0;
+time = 0;
 tic
 endTime = msgArray(length(msgArray)).Timestamp;
+TimestampArray = [];
+
+for i = 1:length(msgArray)
+    TimestampArray = [TimestampArray, msgArray(i).Timestamp];
+    uniqueTimestamp = unique(TimestampArray);
+end
+
+disp(uniqueTimestamp);
+
 
 while toc < endTime
+
     if toc >= msgArray(i).Timestamp     % At new note, update deviceWriter
         msg = msgArray(i);      
         i = i+1;
+        msgArray(i).Timestamp;
         if isNoteOn(msg)
             osc.Frequency = note2freq(msg.Note);
+            note = msg.Note;
+            timeStamp = msg.Timestamp;
+            nonZeroIndices = find(durationArray ~= 0);
+            timeArray = durationArray(nonZeroIndices);
+            time = durationArray(i-1);
             osc.Amplitude = msg.Velocity/127;
-        elseif isNoteOff(msg)
-            if msg.Note == msg.Note
-                osc.Amplitude = 0;
-            end
+            amplitude = msg.Velocity/127;
         end
     end
-    deviceWriter(osc());    % Keep calling deviceWriter as it is updated
+    wave = wavefunction(44100, note, 25, amplitude);
+    soundsc(wave, 44100);
+    % deviceWriter(osc());
 end
 
 end

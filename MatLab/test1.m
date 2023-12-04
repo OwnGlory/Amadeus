@@ -1,4 +1,5 @@
 readme = fopen('Cymatics - All I Need - 165 BPM D# Min.mid');
+
 [readOut, byteCount] = fread(readme);
 fclose(readme);
 % Concatenate ticksPerQNote from 2 bytes
@@ -7,7 +8,7 @@ ticksPerQNote = polyval(readOut(13:14),256);
 % Initialize values
 chunkIndex = 14; % Header chunk is always 14 bytes
 ts = 0; % Timestamp - Starts at zero
-BPM = 120;
+BPM = 140;
 msgArray = [];
 durationArray = [];
 samplefreq = 44100;
@@ -47,11 +48,7 @@ samplefreq = 44100;
 
 % disp(msgArray);
 
-osc = audioOscillator ('sine', 'Amplitude', 0,'SampleRate', 44100,'DutyCycle', 0.75);
-
-deviceWriter = audioDeviceWriter;
-
-simplesynth (msgArray, osc, deviceWriter, durationArray);
+simplesynth (msgArray, durationArray);
 
 function [valueOut,byteLength] = findVariableLength(lengthIndex,readOut)
 
@@ -175,63 +172,69 @@ end
 
 function wave = wavefunction(samplefreq, note, time, amplitude)
     constant_exp = -0.0004;
-    n = 3;
-    
+    n = 6;
     T = (0:1/samplefreq:time);
-    count_note_per_octave = 12;
-    freq = 440 * 2.^((note - 49)/count_note_per_octave);
     wave = zeros(size(T));
+    freq = 440 * 2.^((note-73)/12);
     number_sin = 2 * pi * freq;
     number_exp = constant_exp * number_sin;
     
     for j = 1:n
-        wave = wave + amplitude * sin(2^(j-1) * number_sin * T) .* exp(number_exp * T) ./ 2^(j-1);
+        wave = wave + amplitude * sin(j * number_sin * T) .* exp(number_exp * T) ./ 2^(j-1);
     end
     
     wave = (wave + wave.^3) / n;
 end
 
 
-function simplesynth(msgArray,osc,deviceWriter, durationArray)
-
-i = 1;
+function simplesynth(msgArray, durationArray)
+k = 1;
+i = 0;
 note = 0;
+notes = [];
 amplitude = 0;
-time = 0;
-tic
-endTime = msgArray(length(msgArray)).Timestamp;
-TimestampArray = [];
+time = msgArray(length(msgArray)).Timestamp+1;
+size_arr = (int32(44100*time));
+wave_arr = zeros(1, size_arr);
+nonZeroIndices = find(durationArray ~= 0);
+timeArray = durationArray(nonZeroIndices);
+disp(msgArray);
 
-for i = 1:length(msgArray)
-    TimestampArray = [TimestampArray, msgArray(i).Timestamp];
-    uniqueTimestamp = unique(TimestampArray);
-end
+dataCellArray = cell(length(msgArray), 3);
 
-disp(uniqueTimestamp);
+for j = 1:length(msgArray)
+    msg = msgArray(j);
+    duration = timeArray(k)+2;
 
-
-while toc < endTime
-
-    if toc >= msgArray(i).Timestamp     % At new note, update deviceWriter
-        msg = msgArray(i);      
-        i = i+1;
-        msgArray(i).Timestamp;
-        if isNoteOn(msg)
-            osc.Frequency = note2freq(msg.Note);
-            note = msg.Note;
-            timeStamp = msg.Timestamp;
-            nonZeroIndices = find(durationArray ~= 0);
-            timeArray = durationArray(nonZeroIndices);
-            time = durationArray(i-1);
-            osc.Amplitude = msg.Velocity/127;
-            amplitude = msg.Velocity/127;
+    if isNoteOn(msg)
+        dataCellArray{j, 1} = msg.Timestamp;
+        dataCellArray{j, 2} = note;
+        dataCellArray{j, 3} = msg.Velocity;
+        note = msg.Note;
+        amplitude = msg.Velocity / 127;
+    elseif isNoteOff(msg)
+        if msg.Note == msg.Note
+            amplitude = 0;
         end
     end
-    wave = wavefunction(44100, note, 25, amplitude);
-    soundsc(wave, 44100);
-    % deviceWriter(osc());
-end
 
+    wave = wavefunction(44100, note, duration, amplitude);
+    startIndex = int32(44100 * msgArray(j).Timestamp) + 1;
+    wave_arr(startIndex:startIndex + length(wave)-1) =+ wave;
+
+    if j ~= length(msgArray)
+        if msgArray(j).Timestamp ~= msgArray(j+1).Timestamp
+            k =+ 1;
+        end
+    end
+end
+    maxValue = max(abs(wave_arr));
+    dataTable = cell2table(dataCellArray, 'VariableNames', {'Timestamp', 'Note', 'Velocity'});
+
+    fileName = 'output.txt';
+
+    writetable(dataTable, fileName);
+    % sound(wave_arr/maxValue, 44100);
 end
 
 % ----
@@ -251,7 +254,5 @@ end
 % ----
 
 function freq = note2freq(note)
-freqA = 440;
-noteA = 69;
-freq = freqA * 2.^((note-noteA)/12);
+    freq = 440 * 2.^((note-69)/12);
 end

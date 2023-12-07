@@ -1,10 +1,19 @@
-midiData = readmidi('Cymatics - All I Need - 165 BPM D# Min.mid',1);
-midiInfoData = midiInfo(midiData);
+addpath(genpath('D:\Develop\Amadeus\matlab-midi-master\src'))
 
-matFilename = 'midi_info.mat';
-save(matFilename, 'midiInfoData');
+mifiFile = readmidi('Cymatics - All I Need - 165 BPM D# Min.mid');
 
-loadedData = load('midi_info.mat');
-midiInfoData = loadedData.midiInfoData;
-disp(midiInfoData);
-% isequal(midi.rawbytes_all, writemidi(midi,'new.txt'));
+midiData = midiInfo(mifiFile);
+
+disp(midiData);
+
+% Указываем имя файла
+filename = 'output3.txt';
+
+% Записываем матрицу в текстовый файл с разделителями (по умолчанию запятая)
+writematrix(midiData, filename);
+
+matrixData = load(filename);
+
+midi_new = matrix2midi(matrixData);
+
+writemidi(midi_new, 'testout.mid');

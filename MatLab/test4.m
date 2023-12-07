@@ -1,6 +1,6 @@
 addpath(genpath('D:\Develop\Amadeus\matlab-midi-master\src'))
 
-mifiFile = readmidi('Cymatics - All I Need - 165 BPM D# Min.mid');
+mifiFile = readmidi('testm.mid');
 
 midiData = midiInfo(mifiFile);
 
@@ -29,22 +29,24 @@ size_arr = (int32(44100*time));
 wave_arr = zeros(1, size_arr);
 freq = [];
 amplitude = [];
+duration = [];
 
 for i = 1:length(midiData)
     note = midiData(i,3);
     freq_note = 440 * 2.^((note-73)/12);
     freq = [freq; freq_note];
     amplitude = [amplitude; midiData(i,4) / 127];
+    duration = [duration; midiData(i,6)- midiData(i,5)];
 
     if i ~= numRow
         if midiData(i,5) ~= midiData(i+1,5)
-            duration = midiData(i,6);
             wave = wavefunction(44100, freq, duration, amplitude);
-            
             if length(freq) ~= 1
+                
                 wave = sum(wave);
                 maxValue = max(abs(wave));
                 wave = wave/maxValue;
+
             else
                 maxValue = max(abs(wave));
                 wave = wave/maxValue;
@@ -56,7 +58,6 @@ for i = 1:length(midiData)
             amplitude = [];
         end
     end
-
 end
     % maxValue = max(abs(wave_arr));
     player = audioplayer(wave_arr, 44100);

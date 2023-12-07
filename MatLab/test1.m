@@ -171,7 +171,7 @@ msgOut = midimsg.fromStruct(midiStruct);
 end
 
 function wave = wavefunction(samplefreq, note, time, amplitude)
-    constant_exp = -0.0004;
+    constant_exp = -0.0015;
     n = 6;
     T = (0:1/samplefreq:time);
     wave = zeros(size(T));
@@ -183,44 +183,42 @@ function wave = wavefunction(samplefreq, note, time, amplitude)
         wave = wave + amplitude * sin(j * number_sin * T) .* exp(number_exp * T) ./ 2^(j-1);
     end
     
-    wave = (wave + wave.^3) / n;
+    wave = (wave + wave.^(4));
+    % wave = wave .* 1 + 16 .* T .* exp(-6 .* T);
 end
 
 
 function simplesynth(msgArray, durationArray)
 k = 1;
 i = 0;
+duration = 0;
 note = 0;
 notes = [];
 amplitude = 0;
-time = msgArray(length(msgArray)).Timestamp+1;
+time = (msgArray(length(msgArray)).Timestamp)+1;
 size_arr = (int32(44100*time));
 wave_arr = zeros(1, size_arr);
 nonZeroIndices = find(durationArray ~= 0);
 timeArray = durationArray(nonZeroIndices);
-disp(msgArray);
-
-dataCellArray = cell(length(msgArray), 3);
+% disp(msgArray);
 
 for j = 1:length(msgArray)
     msg = msgArray(j);
-    duration = timeArray(k)+2;
-
+    
     if isNoteOn(msg)
-        dataCellArray{j, 1} = msg.Timestamp;
-        dataCellArray{j, 2} = note;
-        dataCellArray{j, 3} = msg.Velocity;
+        duration = timeArray(k);
         note = msg.Note;
-        amplitude = msg.Velocity / 127;
+        vel = msg.Velocity;
+        amplitude = vel / 127;
     elseif isNoteOff(msg)
-        if msg.Note == msg.Note
+        % if msg.Note == 0
             amplitude = 0;
-        end
+        % end
     end
 
     wave = wavefunction(44100, note, duration, amplitude);
     startIndex = int32(44100 * msgArray(j).Timestamp) + 1;
-    wave_arr(startIndex:startIndex + length(wave)-1) =+ wave;
+    wave_arr(startIndex:startIndex + length(wave) - 1) =+ wave;
 
     if j ~= length(msgArray)
         if msgArray(j).Timestamp ~= msgArray(j+1).Timestamp
@@ -229,12 +227,10 @@ for j = 1:length(msgArray)
     end
 end
     maxValue = max(abs(wave_arr));
-    dataTable = cell2table(dataCellArray, 'VariableNames', {'Timestamp', 'Note', 'Velocity'});
-
-    fileName = 'output.txt';
-
-    writetable(dataTable, fileName);
-    % sound(wave_arr/maxValue, 44100);
+    % soundsc(wave_arr, 44100);
+    plot(wave_arr);
+    player = audioplayer(wave_arr, 44100);
+    play(player);
 end
 
 % ----
@@ -249,10 +245,4 @@ end
 function yes = isNoteOff(msg)
 yes = strcmp(msg.Type,'NoteOff') ...
     || (strcmp(msg.Type,'NoteOn') && msg.Velocity == 0);
-end
-
-% ----
-
-function freq = note2freq(note)
-    freq = 440 * 2.^((note-69)/12);
 end

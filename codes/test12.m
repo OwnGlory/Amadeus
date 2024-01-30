@@ -1,5 +1,5 @@
 % Загрузка аудиофайла
-[audioIn, fs] = audioread('Wav/Аккордики потом ноты.wav');
+[audioIn, fs] = audioread('Wav/D#5 F#5 A#5 D#5.wav');
 fs = fs*4;
 % Предположим, что melody - это ваша мелодия
 n = length(audioIn); % Получаем длину мелодии
@@ -45,16 +45,23 @@ for i = 1:4
         % Определение частотного диапазона
         f = fs*(0:(p/2))/p;
         threshold = 0.028;
+        
+        [maxValue, indexMax] = max(P1);
+        frequency = f(indexMax)/2;
     
         % Нахождение пика с максимальной амплитудой
         
         [peaks, locations] = findpeaks(P1);
         highPeaks = peaks(peaks > threshold);
+        if isempty(highPeaks)
+            highPeaks = frequency;
+        end
         proverka = f(locations(peaks > threshold));
         highFrequencies = [highFrequencies, f(locations(peaks > threshold))/2];
+        if isempty(highFrequencies)
+             highFrequencies = [highFrequencies, frequency]
+        end
 
-        [maxValue, indexMax] = max(P1);
-        frequency = f(indexMax)/2;
         % Сохранение максимальной частоты
         maxFrequencies = [maxFrequencies, frequency];
     end
@@ -68,7 +75,7 @@ for i = 1:4
         highFrequencies(end) = [];
     end
     
-    FreqNote = 1;
+    FreqNote = 0;
     if FreqNote ~= 0
         Freq = [];
         Notes = [];
@@ -79,10 +86,10 @@ for i = 1:4
             Notes = [Notes; note];
         end
         % disp(Freq);
-        % disp(Notes);
+        disp(Notes);
     end
-    perem = length(A_unique2)
-    BPM = BPM + perem
+    perem = length(A_unique2);
+    BPM = BPM + perem;
 end
 
 BPM = BPM/AudioDur;

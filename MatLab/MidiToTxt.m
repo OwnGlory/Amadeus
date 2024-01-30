@@ -1,4 +1,4 @@
-%addpath(genpath('D:\Develop\Amadeus\matlab-midi-master\src'))
+addpath(genpath('Materials\matlab-midi-master\src'))
 % Чтение MIDI файла
 midiFile = readmidi('All_I_Need.mid');
 % Получение информации из MIDI

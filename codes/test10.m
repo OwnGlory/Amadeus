@@ -1,12 +1,16 @@
 % Загрузка аудиофайла
 [audioIn, fs] = audioread('Wav/D#5 F#5 A#5 D#5.wav');
-fs = fs*4;
+fs = fs;
 % Предположим, что melody - это ваша мелодия
 n = length(audioIn); % Получаем длину мелодии
-duration = length(audioIn)/(fs/4);
+duration = length(audioIn)/(fs);
 maxFrequencies = [];
 Freq = [];
 Values = [];
+numStep = 0;
+numPeaks = 0;
+noteDurationArr = [];
+ChangeNote = 1;
 partLength = floor(n/4); % Вычисляем длину каждой части
 
     % Размер окна (в секундах)
@@ -37,10 +41,46 @@ partLength = floor(n/4); % Вычисляем длину каждой части
         frequency = f(indexMax)/2;
 
         % Сохранение максимальной частоты
-        Freq = [Freq; maxValue];
-        Values = [Values; frequency];
-       
+        Freq = [Freq; frequency];
+        Values = [Values; maxValue];
+        if ~isempty(Freq) && k > 1
+            if k == numWindows
+                numPeaks = k - numStep;
+                noteDuration = numPeaks * 0.1;
+                noteDurationArr = [noteDurationArr, noteDuration];
+            end
+
+            if Freq(k) ~= Freq(k-1)
+                new_k = k - 1;
+                numPeaks = new_k - numStep
+                numStep = new_k;
+                noteDuration = numPeaks * 0.1;
+                ChangeNote = 1;
+                noteDurationArr = [noteDurationArr, noteDuration];
+            end
+
+            if Freq(k) == Freq(k-1)
+                if ChangeNote == 1
+                    if Values(k) > Values(k-1)
+                        maxAmp = Values(k);
+                    else
+                        maxAmp = Values(k-1);
+                    end
+                    ChangeNote = 0;
+                else
+                    if Values(k) > maxAmp
+                        new_k = k - 1;
+                        numPeaks = new_k - numStep;
+                        numStep = new_k;
+                        noteDuration = numPeaks * 0.1;
+                        noteDurationArr = [noteDurationArr, noteDuration];
+                    end
+                end
+            end
+
+        end       
     end
     disp(Freq)
+    disp(noteDurationArr)
     disp(Values)
 

@@ -6,7 +6,7 @@ midiData = midiInfo(midiFile);
 % Вывод MIDI данных
 disp(midiData);
 % Указываем имя файла
-filename = 'output.txt';
+filename = 'Materials\output.txt';
 % Записываем матрицу в текстовый файл с разделителями (по умолчанию запятая)
 writematrix(midiData, filename);
 matrixData = load(filename);

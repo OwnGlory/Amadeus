@@ -4,11 +4,11 @@ midiFile = readmidi('All_I_Need.mid');
 % Получение информации из MIDI
 midiData = midiInfo(midiFile);
 % Вывод MIDI данных
-disp(midiData);
+% disp(midiData);
 % Указываем имя файла
-filename = 'Materials\output.txt';
+filename = 'Materials\output42.txt';
 % Записываем матрицу в текстовый файл с разделителями (по умолчанию запятая)
-writematrix(midiData, filename);
+% writematrix(midiData, filename);
 matrixData = load(filename);
-midi_new = matrix2midi(midiData);
-writemidi(midi_new, 'testout2.mid');
+midi_new = matrix2midi(matrixData);
+writemidi(midi_new, 'Materials\testout2.mid');

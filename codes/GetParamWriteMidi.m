@@ -1,5 +1,6 @@
+function [outputArg1,outputArg2] = GetParamWriteMidi(inputArg1,inputArg2)
 % Загрузка аудиофайла
-[audioIn, fs] = audioread('Wav/Аккордики потом ноты.wav');
+[audioIn, fs] = audioread('Wav/D#5 F#5 A#5 D#5.wav');
 % fs = fs;
 % Предположим, что melody - это ваша мелодия
 n = length(audioIn); % Получаем длину мелодии
@@ -8,7 +9,6 @@ maxFrequencies = [];
 Freq = [];
 Values = [];
 Note = [];
-NewFreq = [587.33, 698.46, 880];
 Velocity = [];
 numStep = 0;
 numPeaks = 0;
@@ -81,17 +81,8 @@ partLength = floor(n/4); % Вычисляем длину каждой части
                         vel = 127;
                     end
                     Velocity = [Velocity, round(vel)];
-                    NoteNum = round(12 * log2((frequency*4) / 440) + 69)
+                    NoteNum = round(12 * log2((frequency*4) / 440) + 49)
                     Note = [Note, NoteNum];
-                    if ismember(frequency*4, round(NewFreq))
-                        for i = 1:length(NewFreq)
-                            if round(NewFreq(i)) ~= frequency*4
-                                NoteNum = round(12 * log2((NewFreq(i)) / 440) + 69);
-                                Note = [Note, NoteNum];
-                                StartNote = [StartNote, startNoteDur];
-                            end
-                        end
-                    end
                     ChangeNote = 0;
                 else
                     if Values(k) > maxAmp
@@ -105,8 +96,7 @@ partLength = floor(n/4); % Вычисляем длину каждой части
                     end
                 end
             end
-        end
-
+        end   
         FiveCol = StartNote(1:end-1);
         SixCol = StartNote(2:end);
     end
@@ -114,4 +104,9 @@ partLength = floor(n/4); % Вычисляем длину каждой части
     disp(noteDurationArr)
     disp(Values)
     disp(StartNote)
+
+ 
+outputArg1 = inputArg1;
+outputArg2 = inputArg2;
+end
 

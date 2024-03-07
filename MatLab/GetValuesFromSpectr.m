@@ -1,5 +1,7 @@
 % Загрузка аудиофайла
-[audioIn, fs] = audioread('Wav/Аккордики и ноты одновременно.wav');
+[audioIn, fs] = audioread('Аккордики потом ноты.wav');
+
+filename = 'Materials\output43.txt';
 
 % Предположим, что melody - это ваша мелодия
 n = length(audioIn); % Получаем длину мелодии
@@ -101,9 +103,11 @@ for i = 1:4
         Notes = [];
         % Вывод максимальных частот для каждого окна
         for z = 1:length(A_unique)
-            [note, frequency] = FreqToNote(A_unique(z));
-            NewFreq = [NewFreq; frequency];
-            Notes = [Notes; note];
+            if A_unique(z) ~= 0
+                [note, frequency] = FreqToNote(A_unique(z));
+                NewFreq = [NewFreq; frequency];
+                Notes = [Notes; note];
+            end
         end
         % disp(NewFreq);
         disp(Notes);
@@ -144,7 +148,7 @@ for i = 1:4
         % Сохранение максимальной частоты
         Freq = [Freq; frequency];   
         Values = [Values; maxValue];
-        if ~isempty(Freq) && Counter > 1
+        if ~isempty(Freq) && Counter > 1 && frequency > 0
             if Counter == numWindows
                 numPeaks = Counter - numStep;
                 noteDuration = numPeaks * 0.1;
@@ -171,18 +175,18 @@ for i = 1:4
                     else
                         maxAmp = Values(Counter-1);
                     end
-                    vel = (sqrt(maxAmp) * 127)*7; % !!! Не точное определение амплитуды !!!
+                    vel = (sqrt(maxAmp) * 127)*5; % !!! Не точное определение амплитуды !!!
                     if vel > 127
                         vel = 127;
                     end
                     Velocity = [Velocity, round(vel)];
-                    NoteNum = round(12 * log2((frequency*4) / 440) + 69)
+                    NoteNum = round(12 * log2((frequency*4) / 440) + 69);
                     Note = [Note, NoteNum];
                     [note, frequency] = FreqToNote(frequency);
                     if ismember(frequency*4, round(NewFreq))
                         for z = 1:length(NewFreq)
                             if round(NewFreq(z)) ~= round(frequency*4)
-                                NoteNum = round(12 * log2((NewFreq(z)) / 440) + 69)
+                                NoteNum = round(12 * log2((NewFreq(z)) / 440) + 49);
                                 Note = [Note, NoteNum];
                                 StartNote = [StartNote, startNoteDur];
                                 Velocity = [Velocity, round(vel)];
@@ -191,7 +195,7 @@ for i = 1:4
                     end
                     ChangeNote = 0;
                 else
-                    if Values(Counter) > maxAmp
+                    if Values(Counter) >= maxAmp
                         new_Counter = Counter - 1;
                         numPeaks = new_Counter - numStep;
                         numStep = new_Counter;
@@ -209,5 +213,5 @@ for i = 1:4
 end
 
 BPM = BPM/AudioDur;
-WriteMidiFromArr(Note, Velocity, FiveCol, SixCol);
-TxtToMidi(filename);
+% WriteMidiFromArr(filename, Note, Velocity, FiveCol, SixCol);
+% TxtToMidi(filename);

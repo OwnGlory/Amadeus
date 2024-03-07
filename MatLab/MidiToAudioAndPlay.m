@@ -1,16 +1,17 @@
 fluidsynthPath = 'Materials\FluidSynth\bin\fluidsynth.exe';
 
-midiFilePath = 'Materials\Sound\All_I_Need.mid';
+% midiFilePath = 'Materials\Sound\All_I_Need.mid';
+midiFilePath = 'Materials\testout2.mid';
 
-playPiano(midiFilePath);
-playGuitar(midiFilePath);
-playOrgan(midiFilePath);
-audioFilePath = playViolin(midiFilePath);
+playPiano(midiFilePath, fluidsynthPath);
+playGuitar(midiFilePath, fluidsynthPath);
+playOrgan(midiFilePath, fluidsynthPath);
+playViolin(midiFilePath, fluidsynthPath);
 
-playAudio(audioFilePath);
+% playAudio(audioFilePath);
 
 
-function audioFilePath = playPiano(midiFilePath)
+function audioFilePath = playPiano(midiFilePath, fluidsynthPath)
     soundFontPath = 'Materials\SoundFont\piano.sf2';
     % Выходной аудиофайл
     audioFilePath = 'Materials\outputPiano.wav';
@@ -21,7 +22,7 @@ function audioFilePath = playPiano(midiFilePath)
     
 end
 
-function audioFilePath = playViolin(midiFilePath)
+function audioFilePath = playViolin(midiFilePath, fluidsynthPath)
     soundFontPath = 'Materials\SoundFont\violin.sf2';
     % Выходной аудиофайл
     audioFilePath = 'Materials\outputViolin.wav';
@@ -32,7 +33,7 @@ function audioFilePath = playViolin(midiFilePath)
     
 end
    
-function audioFilePath = playGuitar(midiFilePath)
+function audioFilePath = playGuitar(midiFilePath, fluidsynthPath)
     soundFontPath = 'Materials\SoundFont\guitar.sf2';
     % Выходной аудиофайл
     audioFilePath = 'Materials\outputGuitar.wav';
@@ -43,7 +44,7 @@ function audioFilePath = playGuitar(midiFilePath)
     
 end
 
-function audioFilePath = playOrgan(midiFilePath)
+function audioFilePath = playOrgan(midiFilePath, fluidsynthPath)
     soundFontPath = 'Materials\SoundFont\organ.sf2';
     % Выходной аудиофайл
     audioFilePath = 'Materials\outputOrgan.wav';

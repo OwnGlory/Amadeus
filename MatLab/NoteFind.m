@@ -1,6 +1,6 @@
 %% Загрузка аудиофайла
 
-filename_melody = "E:\Develop\Amadeus\MusicNoteExtraction-master\Hallelujah.mp3";
+filename_melody = "E:\Develop\Amadeus\MusicNoteExtraction-master\FEBeethoven.mp3";
 filename_txt = 'E:\Develop\Amadeus\Materials\output84.txt';
 
 [audioIn, fs] = audioread(filename_melody);
@@ -129,6 +129,7 @@ maxFrequencies3 = [];
 Freq3 = [];
 Values3 = [];
 
+
 % Цикл по окнам
 for k = 1:numWindows
     % Выделение текущего окна
@@ -227,7 +228,7 @@ for i = 1:length(maxFreq)-1
                             end
                         end
 
-                        % if quantity_windows
+                        if quantity_windows
                             if (maxAmp(k) < maxAmp(k+1) || maxAmp(k+1) == 0 || maxAmp(k) < maxAmp(k+2)) && note_peak == 1 
                                 duration = DefinitionDuration(quantity_windows, windowSize, eighth, eighth_half, sixteenth, sixteenth_half, ...
     quarter, quarter_half, half, whole);
@@ -236,7 +237,7 @@ for i = 1:length(maxFreq)-1
                                 note_peak = 0;
                                 quantity_windows = 0;
                             end
-                        % end
+                        end
                     end
                 end
                 
